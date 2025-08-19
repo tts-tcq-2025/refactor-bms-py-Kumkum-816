@@ -1,54 +1,70 @@
-# monitor.py
 from time import sleep
 import sys
 
+# Constants for thresholds
+TEMP_MIN = 95.0
+TEMP_MAX = 102.0
+PULSE_MIN = 60
+PULSE_MAX = 100
+SPO2_MIN = 90
 
-def alarm(message: str):
-    """Display blinking alarm with message."""
+
+def blink_alert(message: str, times: int = 6, delay: float = 1.0):
+    """Show a blinking alert with the given message."""
     print(message)
-    for _ in range(6):
+    for _ in range(times):
         print('\r* ', end='')
         sys.stdout.flush()
-        sleep(1)
+        sleep(delay)
         print('\r *', end='')
         sys.stdout.flush()
-        sleep(1)
+        sleep(delay)
+    print()  # new line after blinking
 
 
-def vitals_ok(temperature: float, pulseRate: float, spo2: float) -> bool:
+def vitals_ok(temperature: float, pulse_rate: int, spo2: int) -> bool:
     """
-    Checks the vitals and prints alarms or warnings.
-    Returns False if any critical limit is breached, True otherwise.
+    Check if vitals are within safe range.
+    Returns True if all are okay, False otherwise.
     """
-    # Temperature checks
-    if temperature < 95:
-        alarm('Temperature critical! Hypothermia risk.')
+    if temperature > TEMP_MAX or temperature < TEMP_MIN:
+        blink_alert(f"Temperature critical! (Current: {temperature}°F)")
         return False
-    elif 95 <= temperature <= 95 + (102 * 0.015):
-        print('Warning: Approaching hypothermia')
-    elif temperature > 102:
-        alarm('Temperature critical! Hyperthermia risk.')
-        return False
-    elif 102 - (102 * 0.015) <= temperature <= 102:
-        print('Warning: Approaching hyperthermia')
 
-    # Pulse checks
-    if pulseRate < 60:
-        alarm('Pulse Rate critical! Too low.')
+    if pulse_rate < PULSE_MIN or pulse_rate > PULSE_MAX:
+        blink_alert(f"Pulse Rate out of range! (Current: {pulse_rate} bpm)")
         return False
-    elif 60 <= pulseRate <= 60 + (100 * 0.015):
-        print('Warning: Approaching bradycardia')
-    elif pulseRate > 100:
-        alarm('Pulse Rate critical! Too high.')
-        return False
-    elif 100 - (100 * 0.015) <= pulseRate <= 100:
-        print('Warning: Approaching tachycardia')
 
-    # SPO2 checks
-    if spo2 < 90:
-        alarm('Oxygen Saturation critical! Hypoxemia risk.')
+    if spo2 < SPO2_MIN:
+        blink_alert(f"Oxygen Saturation too low! (Current: {spo2}%)")
         return False
-    elif 90 <= spo2 <= 90 + (90 * 0.015):
-        print('Warning: Approaching low oxygen saturation')
 
+    print("All vitals are within normal range ✅")
     return True
+
+
+def vitals_status(temperature: float, pulse_rate: int, spo2: int) -> dict:
+    """
+    Return a detailed status report of all vitals.
+    Example:
+    {
+      "temperature": "OK",
+      "pulse_rate": "HIGH",
+      "spo2": "OK"
+    }
+    """
+    status = {}
+
+    status["temperature"] = (
+        "LOW" if temperature < TEMP_MIN else
+        "HIGH" if temperature > TEMP_MAX else "OK"
+    )
+
+    status["pulse_rate"] = (
+        "LOW" if pulse_rate < PULSE_MIN else
+        "HIGH" if pulse_rate > PULSE_MAX else "OK"
+    )
+
+    status["spo2"] = "LOW" if spo2 < SPO2_MIN else "OK"
+
+    return status
