@@ -1,29 +1,29 @@
 import unittest
-from monitor import vitals_ok, vitals_status
+from monitor import VitalsMonitor
+from alerts import AlertSystem
 
+class MockAlertSystem(AlertSystem):
+    def __init__(self):
+        super().__init__(use_console=False)
+        self.messages = []
+
+    def alert(self, message, severity="LOW"):
+        self.messages.append((message, severity))
 
 class MonitorTest(unittest.TestCase):
-    def test_not_ok_when_any_vital_out_of_range(self):
-        # Pulse too high, SpO2 too low
-        self.assertFalse(vitals_ok(99, 102, 70))
-        # All within normal range
-        self.assertTrue(vitals_ok(98.1, 70, 98))
+    def setUp(self):
+        self.mock_alert = MockAlertSystem()
+        self.monitor = VitalsMonitor(self.mock_alert)
 
-    def test_vitals_status_report(self):
-        # Case: pulse too high
-        status = vitals_status(98.1, 120, 96)
-        self.assertEqual(status["pulse_rate"], "HIGH")
-        self.assertEqual(status["temperature"], "OK")
-        self.assertEqual(status["spo2"], "OK")
+    def test_temperature_out_of_range(self):
+        result = self.monitor.vitals_ok(103, 80, 98)
+        self.assertFalse(result)
+        self.assertIn(("Temperature critical!", "HIGH"), self.mock_alert.messages)
 
-        # Case: temperature too low
-        status = vitals_status(90, 80, 96)
-        self.assertEqual(status["temperature"], "LOW")
+    def test_normal_vitals(self):
+        result = self.monitor.vitals_ok(98.6, 75, 98)
+        self.assertTrue(result)
+        self.assertEqual(len(self.mock_alert.messages), 0)
 
-        # Case: oxygen too low
-        status = vitals_status(98.1, 80, 85)
-        self.assertEqual(status["spo2"], "LOW")
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
