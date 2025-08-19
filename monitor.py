@@ -1,37 +1,18 @@
+from alerts import AlertSystem
 
-from time import sleep
-import sys
+class VitalsMonitor:
+    def __init__(self, alert_system: AlertSystem):
+        self.alert_system = alert_system
 
-
-def vitals_ok(temperature, pulseRate, spo2):
-  if temperature > 102 or temperature < 95:
-    print('Temperature critical!')
-    for i in range(6):
-      print('\r* ', end='')
-      sys.stdout.flush()
-      sleep(1)
-      print('\r *', end='')
-      sys.stdout.flush()
-      sleep(1)
-    return False
-  elif pulseRate < 60 or pulseRate > 100:
-    print('Pulse Rate is out of range!')
-    for i in range(6):
-      print('\r* ', end='')
-      sys.stdout.flush()
-      sleep(1)
-      print('\r *', end='')
-      sys.stdout.flush()
-      sleep(1)
-    return False
-  elif spo2 < 90:
-    print('Oxygen Saturation out of range!')
-    for i in range(6):
-      print('\r* ', end='')
-      sys.stdout.flush()
-      sleep(1)
-      print('\r *', end='')
-      sys.stdout.flush()
-      sleep(1)
-    return False
-  return True
+    def vitals_ok(self, temperature, pulse_rate, spo2):
+        """Check vitals and trigger alerts if out of range."""
+        if temperature > 102 or temperature < 95:
+            self.alert_system.alert("Temperature critical!", severity="HIGH")
+            return False
+        elif pulse_rate < 60 or pulse_rate > 100:
+            self.alert_system.alert("Pulse Rate is out of range!", severity="MEDIUM")
+            return False
+        elif spo2 < 90:
+            self.alert_system.alert("Oxygen Saturation out of range!", severity="HIGH")
+            return False
+        return True
