@@ -1,22 +1,29 @@
-from monitor import VitalsMonitor
 from alerts import AlertSystem
+from monitor import VitalsMonitor
+
 
 def main():
-    alert_system = AlertSystem()
+    # Initialize the alert system (console for now, can extend later to email/SMS)
+    alert_system = AlertSystem(use_console=True)
+
+    # Initialize vitals monitor with the alert system
     monitor = VitalsMonitor(alert_system)
 
-    # Example vitals data (could come from sensors later)
-    test_data = [
-        (98.6, 72, 99),   # Normal
-        (103, 75, 97),    # High temperature
-        (98.1, 120, 96),  # High pulse rate
-        (97, 80, 85)      # Low SpO2
+    # Example patient vitals for testing
+    test_vitals = [
+        {"temperature": 98.6, "pulse_rate": 72, "spo2": 97},   # ✅ Normal
+        {"temperature": 103.0, "pulse_rate": 80, "spo2": 95},  # ❌ High temperature
+        {"temperature": 97.0, "pulse_rate": 120, "spo2": 96},  # ❌ High pulse
+        {"temperature": 94.0, "pulse_rate": 65, "spo2": 89},   # ❌ Low temp + Low SpO2
     ]
 
-    for temp, pulse, spo2 in test_data:
-        print(f"\nChecking vitals: Temp={temp}, Pulse={pulse}, SpO2={spo2}")
-        ok = monitor.vitals_ok(temp, pulse, spo2)
-        print("Vitals OK ✅" if ok else "Vitals NOT OK ❌")
+    for i, vitals in enumerate(test_vitals, start=1):
+        print(f"\n--- Checking patient {i} ---")
+        status = monitor.vitals_ok(
+            vitals["temperature"], vitals["pulse_rate"], vitals["spo2"]
+        )
+        print("Vitals OK:", status)
+
 
 if __name__ == "__main__":
     main()
